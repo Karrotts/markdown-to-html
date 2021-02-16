@@ -46,6 +46,11 @@ namespace ConvertMarkdown.Tests
         {
             Assert.AreEqual("<h6>Hello World!</h6>", Renderer.Heading(7, "Hello World!"));
         }
+        [Test]
+        public void HeadingTest8()
+        {
+            Assert.AreEqual("<h6>Hello World!</h6>", Renderer.Heading(124, "Hello World!"));
+        }
         #endregion
     }
 }
