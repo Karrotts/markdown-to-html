@@ -6,13 +6,22 @@ namespace ConvertMarkdown
 {
     public enum TokenType
     {
-        Header,
+        Header1,
+        Header2,
+        Header3,
+        Header4,
+        Header5,
+        Header6,
         Paragraph,
-        LineBreak,
         Bold,
         Italic,
         BoldItalic,
+    }
+
+    public enum SpecialTokenType
+    {
         BlockQuote,
+        LineBreak,
         OrderList,
         UnorderedList,
         Code,
@@ -26,12 +35,60 @@ namespace ConvertMarkdown
         {
             // Add definitions for each of the token types
             tokenMatchers = new List<TokenMatcher>();
-            tokenMatchers.Add(new TokenMatcher(TokenType.Header, "([A-Z])\\w+"));
+
+            tokenMatchers.Add(new TokenMatcher(TokenType.Header1, "^# (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Header2, "^## (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Header3, "^### (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Header4, "^#### (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Header5, "^##### (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Header6, "^###### (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Bold, "\\*\\*(.+?)\\*\\*"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "\\*(.+?)\\*"));
         }
 
-        public void Tokenize(string text)
+        public string Tokenize(string text)
         {
-
+            foreach (TokenMatcher matcher in tokenMatchers)
+            {
+                TokenMatch match = matcher.Match(text);
+                while (match.IsMatch)
+                {
+                    string replacement = "";
+                    switch(match.TokenType)
+                    {
+                        case TokenType.Header1:
+                            replacement = Renderer.Heading(1, match.Value);
+                            break;
+                        case TokenType.Header2:
+                            replacement = Renderer.Heading(2, match.Value);
+                            break;
+                        case TokenType.Header3:
+                            replacement = Renderer.Heading(3, match.Value);
+                            break;
+                        case TokenType.Header4:
+                            replacement = Renderer.Heading(4, match.Value);
+                            break;
+                        case TokenType.Header5:
+                            replacement = Renderer.Heading(5, match.Value);
+                            break;
+                        case TokenType.Header6:
+                            replacement = Renderer.Heading(6, match.Value);
+                            break;
+                        case TokenType.Italic:
+                            replacement = Renderer.Italic(match.Value);
+                            break;
+                        case TokenType.Bold:
+                            replacement = Renderer.Bold(match.Value);
+                            break;
+                        default:
+                            break;
+                    }
+                    text = Builder.Build(text, replacement, match.StartIndex, match.EndIndex);
+                    match = matcher.Match(text);
+                }
+            }
+            return text;
         }
     }
 
@@ -51,16 +108,13 @@ namespace ConvertMarkdown
             var match = regex.Match(inputString);
             if (match.Success)
             {
-                string remainingText = string.Empty;
-                if (match.Length != inputString.Length)
-                    remainingText = inputString.Substring(match.Length);
-
                 return new TokenMatch()
                 {
                     IsMatch = true,
-                    RemainingText = remainingText,
                     TokenType = type,
-                    Value = match.Value
+                    Value = match.Groups[1].Value,
+                    StartIndex = match.Index,
+                    EndIndex = match.Index + match.Length - 1
                 };
             }
             else
@@ -76,6 +130,7 @@ namespace ConvertMarkdown
         public bool IsMatch { get; set; }
         public TokenType TokenType { get; set; }
         public string Value { get; set; }
-        public string RemainingText { get; set; }
+        public int StartIndex { get; set; }
+        public int EndIndex { get; set; }
     }
 }

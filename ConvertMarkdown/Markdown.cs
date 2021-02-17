@@ -6,11 +6,15 @@ namespace ConvertMarkdown
 {
     public static class Markdown
     {
+        // single line conversion
         public static string Convert(string text)
         {
-            return "";
+            Tokenizer tokenizer = new Tokenizer();
+            text = tokenizer.Tokenize(text);
+            return text;
         }
 
+        // convert from file
         public static string ConvertFile(string path)
         {
             return "";

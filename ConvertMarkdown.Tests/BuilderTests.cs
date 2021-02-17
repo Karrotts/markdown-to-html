@@ -11,7 +11,7 @@ namespace ConvertMarkdown.Tests
         }
 
         [Test]
-        public void BuilderTest1()
+        public void BuilderBasicTest()
         {
             Assert.AreEqual("Welcome to the <em>Party</em>", Builder.Build("Welcome to the *Party*","<em>Party</em>", 15, 21));
         }
