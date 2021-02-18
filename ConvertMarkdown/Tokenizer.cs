@@ -54,10 +54,10 @@ namespace ConvertMarkdown
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
         }
 
-        public string Tokenize(string text)
+        public string Tokenize(string text, List<string> htmlLines)
         {
+            SpecialTokenize(ref text, htmlLines);
             SimpleTokenize(ref text);
-            SpecialTokenize(ref text);
             return text;
         }
 
@@ -107,7 +107,7 @@ namespace ConvertMarkdown
             }
         }
 
-        public void SpecialTokenize(ref string line)
+        public void SpecialTokenize(ref string line, List<string> htmlLines)
         {
             bool itemFound = false;
             foreach (TokenMatcher matcher in specialTokenMatchers)
@@ -119,9 +119,12 @@ namespace ConvertMarkdown
                     switch (match.TokenType)
                     {
                         case TokenType.BlockQuote:
+                            line = Builder.RepaceInString(line, "", 0, 1);
+
+                            if (!previousElementWasBlockQuote)
+                                htmlLines.Add("<blockquote>");
+                
                             previousElementWasBlockQuote = true;
-                            line = Builder.RepaceInString(line, "", match.StartIndex, match.EndIndex);
-                            line = "<blockquote>\n" + line;
                             break;
                         default:
                             break;
@@ -132,10 +135,9 @@ namespace ConvertMarkdown
             if (!itemFound)
             {
                 if (previousElementWasBlockQuote)
-                {
-                    line = "<\\blockquote>\n" + line;
-                    previousElementWasBlockQuote = false;
-                }
+                    htmlLines.Add("</blockquote>");
+
+                previousElementWasBlockQuote = false;
             }
         }
 
@@ -144,7 +146,7 @@ namespace ConvertMarkdown
             string closer = ""; 
             if (previousElementWasBlockQuote)
             {
-                closer += "<\\blockquote>\n";
+                closer += "</blockquote>";
                 previousElementWasBlockQuote = false;
             }
             return closer;
