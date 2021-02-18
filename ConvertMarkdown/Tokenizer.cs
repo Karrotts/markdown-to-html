@@ -16,6 +16,7 @@ namespace ConvertMarkdown
         Bold,
         Italic,
         BoldItalic,
+        BlockQuote
     }
 
     public enum SpecialTokenType
@@ -30,11 +31,15 @@ namespace ConvertMarkdown
 
     public class Tokenizer
     {
+        private bool previousElementWasBlockQuote = false;
+
         private List<TokenMatcher> tokenMatchers;
+        private List<TokenMatcher> specialTokenMatchers;
         public Tokenizer()
         {
             // Add definitions for each of the token types
             tokenMatchers = new List<TokenMatcher>();
+            specialTokenMatchers = new List<TokenMatcher>();
 
             tokenMatchers.Add(new TokenMatcher(TokenType.Header1, "^# (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Header2, "^## (.+)"));
@@ -45,17 +50,26 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Bold, "\\*\\*(.+?)\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "\\*(.+?)\\*"));
+
+            specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
         }
 
         public string Tokenize(string text)
         {
+            SimpleTokenize(ref text);
+            SpecialTokenize(ref text);
+            return text;
+        }
+
+        public void SimpleTokenize(ref string line)
+        {
             foreach (TokenMatcher matcher in tokenMatchers)
             {
-                TokenMatch match = matcher.Match(text);
+                TokenMatch match = matcher.Match(line);
                 while (match.IsMatch)
                 {
                     string replacement = "";
-                    switch(match.TokenType)
+                    switch (match.TokenType)
                     {
                         case TokenType.Header1:
                             replacement = Renderer.Heading(1, match.Value);
@@ -81,14 +95,59 @@ namespace ConvertMarkdown
                         case TokenType.Bold:
                             replacement = Renderer.Bold(match.Value);
                             break;
+                        case TokenType.BoldItalic:
+                            replacement = Renderer.BoldItalic(match.Value);
+                            break;
                         default:
                             break;
                     }
-                    text = Builder.Build(text, replacement, match.StartIndex, match.EndIndex);
-                    match = matcher.Match(text);
+                    line = Builder.RepaceInString(line, replacement, match.StartIndex, match.EndIndex);
+                    match = matcher.Match(line);
                 }
             }
-            return text;
+        }
+
+        public void SpecialTokenize(ref string line)
+        {
+            bool itemFound = false;
+            foreach (TokenMatcher matcher in specialTokenMatchers)
+            {
+                TokenMatch match = matcher.Match(line);
+                if (match.IsMatch)
+                {
+                    itemFound = true;
+                    switch (match.TokenType)
+                    {
+                        case TokenType.BlockQuote:
+                            previousElementWasBlockQuote = true;
+                            line = Builder.RepaceInString(line, "", match.StartIndex, match.EndIndex);
+                            line = "<blockquote>\n" + line;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (!itemFound)
+            {
+                if (previousElementWasBlockQuote)
+                {
+                    line = "<\\blockquote>\n" + line;
+                    previousElementWasBlockQuote = false;
+                }
+            }
+        }
+
+        public string Close()
+        {
+            string closer = ""; 
+            if (previousElementWasBlockQuote)
+            {
+                closer += "<\\blockquote>\n";
+                previousElementWasBlockQuote = false;
+            }
+            return closer;
         }
     }
 
@@ -112,6 +171,7 @@ namespace ConvertMarkdown
                 {
                     IsMatch = true,
                     TokenType = type,
+                    BaseValue = match.Value,
                     Value = match.Groups[1].Value,
                     StartIndex = match.Index,
                     EndIndex = match.Index + match.Length - 1
@@ -129,6 +189,7 @@ namespace ConvertMarkdown
     {
         public bool IsMatch { get; set; }
         public TokenType TokenType { get; set; }
+        public string BaseValue { get; set; }
         public string Value { get; set; }
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }

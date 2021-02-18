@@ -6,7 +6,7 @@ namespace ConvertMarkdown
 {
     public static class Builder
     {
-        public static string Build(string original, string replacement, int startIndex, int endIndex)
+        public static string RepaceInString(string original, string replacement, int startIndex, int endIndex)
         {
             //Original: Welcome to the *Party*
             //Replacement: <em>Party</em>
