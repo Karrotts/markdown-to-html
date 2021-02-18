@@ -23,7 +23,14 @@ namespace ConvertMarkdown.Tests
         [Test]
         public void MarkdownBasicTest()
         {
-            List<string> lines = new List<string>(){ "Hello World! ", "> # **RegExr** created ***this*** *hello world* **This is bold of you!**" };
+            List<string> lines = new List<string>(){
+                "[Hello World!](https://www.example.com/ \"This is an example\")",
+                "**This is a test of my parser**",
+                "> This should be in a blockquote",
+                "## This should be a H2 with an *italic*",
+                "This should not have any formating!",
+                "*What am I doing with my life?*"
+            };
             string result = Markdown.Convert(lines);
             Console.WriteLine(result);
         }

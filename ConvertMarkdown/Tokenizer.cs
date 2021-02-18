@@ -16,19 +16,9 @@ namespace ConvertMarkdown
         Bold,
         Italic,
         BoldItalic,
-        BlockQuote
-    }
-
-    public enum SpecialTokenType
-    {
         BlockQuote,
-        LineBreak,
-        OrderList,
-        UnorderedList,
-        Code,
-        Image
+        Link,
     }
-
     public class Tokenizer
     {
         private bool previousElementWasBlockQuote = false;
@@ -52,6 +42,8 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "\\*(.+?)\\*"));
 
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
+            specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
+            specialTokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
         }
 
         public string Tokenize(string text, List<string> htmlLines)
@@ -126,6 +118,15 @@ namespace ConvertMarkdown
                 
                             previousElementWasBlockQuote = true;
                             break;
+
+                        case TokenType.Link:
+                            line = Builder.RepaceInString(line, 
+                                                          Renderer.Link(match.BaseMatch.Groups[1].Value, 
+                                                                        match.BaseMatch.Groups[2].Value),
+                                                          match.StartIndex,
+                                                          match.EndIndex);
+                            break;
+
                         default:
                             break;
                     }
@@ -173,7 +174,7 @@ namespace ConvertMarkdown
                 {
                     IsMatch = true,
                     TokenType = type,
-                    BaseValue = match.Value,
+                    BaseMatch = match,
                     Value = match.Groups[1].Value,
                     StartIndex = match.Index,
                     EndIndex = match.Index + match.Length - 1
@@ -191,7 +192,7 @@ namespace ConvertMarkdown
     {
         public bool IsMatch { get; set; }
         public TokenType TokenType { get; set; }
-        public string BaseValue { get; set; }
+        public Match BaseMatch { get; set; }
         public string Value { get; set; }
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }
