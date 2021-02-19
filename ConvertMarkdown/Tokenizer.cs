@@ -118,15 +118,12 @@ namespace ConvertMarkdown
                 
                             previousElementWasBlockQuote = true;
                             break;
-
                         case TokenType.Link:
                             line = Builder.RepaceInString(line, 
-                                                          Renderer.Link(match.BaseMatch.Groups[1].Value, 
-                                                                        match.BaseMatch.Groups[2].Value),
+                                                          Renderer.Link(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value),
                                                           match.StartIndex,
                                                           match.EndIndex);
                             break;
-
                         default:
                             break;
                     }

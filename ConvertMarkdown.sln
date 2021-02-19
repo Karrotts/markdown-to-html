@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertMarkdown", "ConvertMarkdown\ConvertMarkdown.csproj", "{A7DA9E15-B339-4882-A638-E52E8FE82292}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConvertMarkdown", "ConvertMarkdown\ConvertMarkdown.csproj", "{A7DA9E15-B339-4882-A638-E52E8FE82292}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertMarkdown.Tests", "ConvertMarkdown.Tests\ConvertMarkdown.Tests.csproj", "{F43E0493-1A17-4C12-B262-92F8B0CE4200}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConvertMarkdown.Tests", "ConvertMarkdown.Tests\ConvertMarkdown.Tests.csproj", "{F43E0493-1A17-4C12-B262-92F8B0CE4200}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertMarkdown.Web", "ConvertMarkdown.Web\ConvertMarkdown.Web.csproj", "{F58C1662-846D-43BF-A4EB-3C135FE02852}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{F43E0493-1A17-4C12-B262-92F8B0CE4200}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F43E0493-1A17-4C12-B262-92F8B0CE4200}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F43E0493-1A17-4C12-B262-92F8B0CE4200}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F58C1662-846D-43BF-A4EB-3C135FE02852}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F58C1662-846D-43BF-A4EB-3C135FE02852}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F58C1662-846D-43BF-A4EB-3C135FE02852}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F58C1662-846D-43BF-A4EB-3C135FE02852}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
