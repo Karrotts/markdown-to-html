@@ -35,6 +35,29 @@ namespace ConvertMarkdown.Tests
             Console.WriteLine(result);
         }
 
-
+        [Test]
+        public void TabCount1()
+        {
+            Tokenizer tokenizer = new Tokenizer();
+            Assert.AreEqual(1, tokenizer.CurrentTab("\tHello World!"));
+        }
+        [Test]
+        public void TabCount2()
+        {
+            Tokenizer tokenizer = new Tokenizer();
+            Assert.AreEqual(0, tokenizer.CurrentTab("Hello World!"));
+        }
+        [Test]
+        public void TabCount3()
+        {
+            Tokenizer tokenizer = new Tokenizer();
+            Assert.AreEqual(2, tokenizer.CurrentTab("\t\tHello World!"));
+        }
+        [Test]
+        public void TabCount4()
+        {
+            Tokenizer tokenizer = new Tokenizer();
+            Assert.AreEqual(3, tokenizer.CurrentTab("\t\t\tHello World!"));
+        }
     }
 }

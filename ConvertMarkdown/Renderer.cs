@@ -50,18 +50,7 @@ namespace ConvertMarkdown
             return $"<blockquote>{text}</blockquote>";
         }
 
-        public static string OrderList(string[] text)
-        {
-            string output = "<ol>";
-            foreach(string item in text)
-            {
-                output += $"<li>{item}</li>";
-            }
-            output += "</ol>";
-            return output;
-        }
-
-        public static string UnorderedList(string text)
+        public static string ListItem(string text)
         {
             return $"<li>{text}</li>";
         }
@@ -79,8 +68,8 @@ namespace ConvertMarkdown
         public static string Link(string linkText, string linkSide)
         {
             var firstSpaceIndex = linkSide.IndexOf(" ");
-            var link = linkSide.Substring(0, firstSpaceIndex);
-            var title = linkSide.Substring(firstSpaceIndex + 1);
+            var link = firstSpaceIndex >= 0 ? linkSide.Substring(0, firstSpaceIndex) : linkSide;
+            var title = firstSpaceIndex >= 0 ? linkSide.Substring(firstSpaceIndex + 1) : "";
             title = title.Replace("\"", "");
             return $"<a href=\"{link}\" title=\"{title}\">{linkText}</a>";
         }

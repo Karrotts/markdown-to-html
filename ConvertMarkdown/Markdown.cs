@@ -13,7 +13,7 @@ namespace ConvertMarkdown
 
             foreach (string markdown in markdownLines)
             {
-                htmlLines.Add(tokenizer.Tokenize(markdown, htmlLines));
+                htmlLines.Add(tokenizer.Tokenize(markdown.Trim(' '), htmlLines));
             }
 
             htmlLines.Add(tokenizer.Close());

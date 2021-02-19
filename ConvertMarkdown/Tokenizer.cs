@@ -6,18 +6,14 @@ namespace ConvertMarkdown
 {
     public enum TokenType
     {
-        Header1,
-        Header2,
-        Header3,
-        Header4,
-        Header5,
-        Header6,
+        Header,
         Paragraph,
         Bold,
         Italic,
         BoldItalic,
         BlockQuote,
         Link,
+        OrderedList,
         UnorderedList
     }
     public class Tokenizer
@@ -26,25 +22,23 @@ namespace ConvertMarkdown
         private List<TokenMatcher> specialTokenMatchers;
         private Stack<TokenType> foundSpecialTokens;
 
+        private byte tabIndex;
+
         public Tokenizer()
         {
-            // Add definitions for each of the token types
             tokenMatchers = new List<TokenMatcher>();
             specialTokenMatchers = new List<TokenMatcher>();
             foundSpecialTokens = new Stack<TokenType>();
 
-            tokenMatchers.Add(new TokenMatcher(TokenType.Header1, "^# (.+)"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.Header2, "^## (.+)"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.Header3, "^### (.+)"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.Header4, "^#### (.+)"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.Header5, "^##### (.+)"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.Header6, "^###### (.+)"));
+            tabIndex = 0;
+
+            tokenMatchers.Add(new TokenMatcher(TokenType.Header, "^#+ (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Bold, "\\*\\*(.+?)\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "\\*(.+?)\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
-
             specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
+            specialTokenMatchers.Add(new TokenMatcher(TokenType.OrderedList, "^[0-9]+\\. (.+)"));
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
         }
@@ -58,6 +52,7 @@ namespace ConvertMarkdown
 
         public void SimpleTokenize(ref string line)
         {
+            bool headerFound = false;
             foreach (TokenMatcher matcher in tokenMatchers)
             {
                 TokenMatch match = matcher.Match(line);
@@ -66,23 +61,10 @@ namespace ConvertMarkdown
                     string replacement = "";
                     switch (match.TokenType)
                     {
-                        case TokenType.Header1:
-                            replacement = Renderer.Heading(1, match.Value);
-                            break;
-                        case TokenType.Header2:
-                            replacement = Renderer.Heading(2, match.Value);
-                            break;
-                        case TokenType.Header3:
-                            replacement = Renderer.Heading(3, match.Value);
-                            break;
-                        case TokenType.Header4:
-                            replacement = Renderer.Heading(4, match.Value);
-                            break;
-                        case TokenType.Header5:
-                            replacement = Renderer.Heading(5, match.Value);
-                            break;
-                        case TokenType.Header6:
-                            replacement = Renderer.Heading(6, match.Value);
+                        case TokenType.Header:
+                            int tokenCount = line.Length - line.Replace("#", "").Length;
+                            replacement = Renderer.Heading(tokenCount, match.Value);
+                            headerFound = true;
                             break;
                         case TokenType.Italic:
                             replacement = Renderer.Italic(match.Value);
@@ -103,12 +85,25 @@ namespace ConvertMarkdown
                     match = matcher.Match(line);
                 }
             }
+
+            if(!headerFound && !string.IsNullOrWhiteSpace(line))
+            {
+                line = Builder.RepaceInString(line, Renderer.Paragraph(line), 0, line.Length - 1);
+            }
         }
 
         public void SpecialTokenize(ref string line, List<string> htmlLines)
         {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                htmlLines.Add("<br>");
+                return;
+            }
+
             bool itemFound = false;
             bool tabFound = line.IndexOf("\t") == 0;
+
+            byte newTabIndex = CurrentTab(line);
 
             line = tabFound ? line.Replace("\t", "") : line;
 
@@ -130,13 +125,80 @@ namespace ConvertMarkdown
                             }
                             break;
                         case TokenType.UnorderedList:
-                            if(foundSpecialTokens.Count == 0 || foundSpecialTokens.Peek() != TokenType.UnorderedList || tabFound)
+                            // Check if the previous token was an unordered list and pop it from the stack
+                            if (foundSpecialTokens.Count > 0
+                            && foundSpecialTokens.Peek() == TokenType.OrderedList)
+                            {
+                                htmlLines.Add("</ol>");
+                                foundSpecialTokens.Pop();
+                            }
+
+                            // Add new element if there is a tab or first time seeing the match
+                            if (foundSpecialTokens.Count == 0 
+                            || foundSpecialTokens.Peek() != TokenType.UnorderedList 
+                            || tabFound && newTabIndex > tabIndex && newTabIndex - tabIndex == 1)
                             {
                                 htmlLines.Add("<ul>");
                                 foundSpecialTokens.Push(TokenType.UnorderedList);
+                                tabIndex = newTabIndex;
                             }
+
+                            // Close child element if untabbed
+                            if (newTabIndex < tabIndex)
+                            {
+                                while(tabIndex - newTabIndex > 0)
+                                {
+                                    if(foundSpecialTokens.Peek() == TokenType.UnorderedList)
+                                    {
+                                        htmlLines.Add("</ul>");
+                                        foundSpecialTokens.Pop();
+                                        tabIndex--;
+                                    }
+                                }
+                            }
+
+                            // Insert list item into line
                             line = Builder.RepaceInString(line,
-                                                          Renderer.UnorderedList(match.Value),
+                                                          Renderer.ListItem(match.Value),
+                                                          match.StartIndex,
+                                                          match.EndIndex);
+                            break;
+                        case TokenType.OrderedList:
+                            // Check if the previous token was an unordered list and pop it from the stack
+                            if (foundSpecialTokens.Count > 0
+                            && foundSpecialTokens.Peek() == TokenType.UnorderedList)
+                            {
+                                htmlLines.Add("</ul>");
+                                foundSpecialTokens.Pop();
+                            }
+
+                            // Add new element if there is a tab or first time seeing the match
+                            if (foundSpecialTokens.Count == 0
+                            || foundSpecialTokens.Peek() != TokenType.OrderedList
+                            || tabFound && newTabIndex > tabIndex && newTabIndex - tabIndex == 1)
+                            {
+                                htmlLines.Add("<ol>");
+                                foundSpecialTokens.Push(TokenType.OrderedList);
+                                tabIndex = newTabIndex;
+                            }
+
+                            // Close child element if untabbed
+                            else if (newTabIndex < tabIndex)
+                            {
+                                while (tabIndex - newTabIndex > 0)
+                                {
+                                    if (foundSpecialTokens.Peek() == TokenType.OrderedList)
+                                    {
+                                        htmlLines.Add("</ol>");
+                                        foundSpecialTokens.Pop();
+                                        tabIndex--;
+                                    }
+                                }
+                            }
+
+                            // Insert list item into line
+                            line = Builder.RepaceInString(line,
+                                                          Renderer.ListItem(match.Value),
                                                           match.StartIndex,
                                                           match.EndIndex);
                             break;
@@ -154,6 +216,7 @@ namespace ConvertMarkdown
 
         public string Close()
         {
+            tabIndex = 0;
             string output = "";
             while(foundSpecialTokens.Count > 0)
             {
@@ -167,11 +230,23 @@ namespace ConvertMarkdown
                         output += "</ul>";
                         foundSpecialTokens.Pop();
                         break;
+                    case TokenType.OrderedList:
+                        output += "</ol>";
+                        foundSpecialTokens.Pop();
+                        break;
                     default:
                         break;
                 }
             }
             return output;
+        }
+
+        public byte CurrentTab(string line)
+        {
+            byte count = 0;
+            while (line.IndexOf("\t", count) >= 0)
+                count++;
+            return count; 
         }
     }
 
