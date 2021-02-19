@@ -61,15 +61,9 @@ namespace ConvertMarkdown
             return output;
         }
 
-        public static string UnorderedList(string[] text)
+        public static string UnorderedList(string text)
         {
-            string output = "<ul>";
-            foreach (string item in text)
-            {
-                output += $"<li>{item}</li>";
-            }
-            output += "</ul>";
-            return output;
+            return $"<li>{text}</li>";
         }
 
         public static string Code(string text)

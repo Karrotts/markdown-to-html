@@ -18,18 +18,20 @@ namespace ConvertMarkdown
         BoldItalic,
         BlockQuote,
         Link,
+        UnorderedList
     }
     public class Tokenizer
     {
-        private bool previousElementWasBlockQuote = false;
-
         private List<TokenMatcher> tokenMatchers;
         private List<TokenMatcher> specialTokenMatchers;
+        private Stack<TokenType> foundSpecialTokens;
+
         public Tokenizer()
         {
             // Add definitions for each of the token types
             tokenMatchers = new List<TokenMatcher>();
             specialTokenMatchers = new List<TokenMatcher>();
+            foundSpecialTokens = new Stack<TokenType>();
 
             tokenMatchers.Add(new TokenMatcher(TokenType.Header1, "^# (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Header2, "^## (.+)"));
@@ -40,10 +42,11 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Bold, "\\*\\*(.+?)\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "\\*(.+?)\\*"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
 
+            specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
-            specialTokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
         }
 
         public string Tokenize(string text, List<string> htmlLines)
@@ -90,6 +93,9 @@ namespace ConvertMarkdown
                         case TokenType.BoldItalic:
                             replacement = Renderer.BoldItalic(match.Value);
                             break;
+                        case TokenType.Link:
+                            replacement = Renderer.Link(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value);
+                            break;
                         default:
                             break;
                     }
@@ -102,6 +108,10 @@ namespace ConvertMarkdown
         public void SpecialTokenize(ref string line, List<string> htmlLines)
         {
             bool itemFound = false;
+            bool tabFound = line.IndexOf("\t") == 0;
+
+            line = tabFound ? line.Replace("\t", "") : line;
+
             foreach (TokenMatcher matcher in specialTokenMatchers)
             {
                 TokenMatch match = matcher.Match(line);
@@ -113,14 +123,20 @@ namespace ConvertMarkdown
                         case TokenType.BlockQuote:
                             line = Builder.RepaceInString(line, "", 0, 1);
 
-                            if (!previousElementWasBlockQuote)
+                            if (foundSpecialTokens.Count == 0 || foundSpecialTokens.Peek() != TokenType.BlockQuote)
+                            {
                                 htmlLines.Add("<blockquote>");
-                
-                            previousElementWasBlockQuote = true;
+                                foundSpecialTokens.Push(TokenType.BlockQuote);
+                            }
                             break;
-                        case TokenType.Link:
-                            line = Builder.RepaceInString(line, 
-                                                          Renderer.Link(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value),
+                        case TokenType.UnorderedList:
+                            if(foundSpecialTokens.Count == 0 || foundSpecialTokens.Peek() != TokenType.UnorderedList || tabFound)
+                            {
+                                htmlLines.Add("<ul>");
+                                foundSpecialTokens.Push(TokenType.UnorderedList);
+                            }
+                            line = Builder.RepaceInString(line,
+                                                          Renderer.UnorderedList(match.Value),
                                                           match.StartIndex,
                                                           match.EndIndex);
                             break;
@@ -132,22 +148,30 @@ namespace ConvertMarkdown
 
             if (!itemFound)
             {
-                if (previousElementWasBlockQuote)
-                    htmlLines.Add("</blockquote>");
-
-                previousElementWasBlockQuote = false;
+                htmlLines.Add(Close());
             }
         }
 
         public string Close()
         {
-            string closer = ""; 
-            if (previousElementWasBlockQuote)
+            string output = "";
+            while(foundSpecialTokens.Count > 0)
             {
-                closer += "</blockquote>";
-                previousElementWasBlockQuote = false;
+                switch(foundSpecialTokens.Peek())
+                {
+                    case TokenType.BlockQuote:
+                        output += "</blockquote>";
+                        foundSpecialTokens.Pop();
+                        break;
+                    case TokenType.UnorderedList:
+                        output += "</ul>";
+                        foundSpecialTokens.Pop();
+                        break;
+                    default:
+                        break;
+                }
             }
-            return closer;
+            return output;
         }
     }
 
