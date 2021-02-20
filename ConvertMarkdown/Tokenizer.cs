@@ -23,6 +23,7 @@ namespace ConvertMarkdown
         private Stack<TokenType> foundSpecialTokens;
 
         private byte tabIndex;
+        private bool headerFound;
 
         public Tokenizer()
         {
@@ -31,6 +32,7 @@ namespace ConvertMarkdown
             foundSpecialTokens = new Stack<TokenType>();
 
             tabIndex = 0;
+            headerFound = false;
 
             tokenMatchers.Add(new TokenMatcher(TokenType.Header, "^#+ (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
@@ -52,7 +54,6 @@ namespace ConvertMarkdown
 
         public void SimpleTokenize(ref string line)
         {
-            bool headerFound = false;
             foreach (TokenMatcher matcher in tokenMatchers)
             {
                 TokenMatch match = matcher.Match(line);
@@ -90,15 +91,13 @@ namespace ConvertMarkdown
             {
                 line = Builder.RepaceInString(line, Renderer.Paragraph(line), 0, line.Length - 1);
             }
+
+            headerFound = false;
         }
 
         public void SpecialTokenize(ref string line, List<string> htmlLines)
         {
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                htmlLines.Add("<br>");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(line)) return;
 
             bool itemFound = false;
             bool tabFound = line.IndexOf("\t") == 0;
@@ -162,6 +161,7 @@ namespace ConvertMarkdown
                                                           Renderer.ListItem(match.Value),
                                                           match.StartIndex,
                                                           match.EndIndex);
+                            headerFound = true;
                             break;
                         case TokenType.OrderedList:
                             // Check if the previous token was an unordered list and pop it from the stack
@@ -201,6 +201,7 @@ namespace ConvertMarkdown
                                                           Renderer.ListItem(match.Value),
                                                           match.StartIndex,
                                                           match.EndIndex);
+                            headerFound = true;
                             break;
                         default:
                             break;
