@@ -5,9 +5,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
+    <title>Rendered</title>
+    <link rel="stylesheet" href="~/css/main.css" />
 </head>
 <body>
-    <p>@Html.Raw(Model.HTMLText)</p>
+    <div class="center">
+        <div class="markdown">
+            @Html.Raw(Model.HTMLText)
+        </div>
+    </div>
 </body>
 </html>

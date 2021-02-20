@@ -19,6 +19,8 @@ namespace ConvertMarkdown.Web.Controllers
         [HttpPost]
         public ViewResult RenderResult(Models.Markdown markdown)
         {
+            if (string.IsNullOrEmpty(markdown.MarkdownText)) return View("Index");
+
             List<string> lines = markdown.MarkdownText.Split(
                                     new[] { "\r\n", "\r", "\n" },
                                     StringSplitOptions.None
