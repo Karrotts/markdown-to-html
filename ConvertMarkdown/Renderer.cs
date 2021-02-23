@@ -60,9 +60,13 @@ namespace ConvertMarkdown
             return $"<code>{text}</code>";
         }
 
-        public static string Image(string src, string text)
+        public static string Image(string linkText, string linkSide)
         {
-            return $"<img src=\"{src}\" alt=\"{text}\">";
+            var firstSpaceIndex = linkSide.IndexOf(" ");
+            var link = firstSpaceIndex >= 0 ? linkSide.Substring(0, firstSpaceIndex) : linkSide;
+            var title = firstSpaceIndex >= 0 ? linkSide.Substring(firstSpaceIndex + 1) : "";
+            title = title.Replace("\"", "");
+            return $"<img src=\"{link}\" alt=\"{linkText}\" title=\"{title}\"/>";
         }
 
         public static string Link(string linkText, string linkSide)

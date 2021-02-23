@@ -14,7 +14,9 @@ namespace ConvertMarkdown
         BlockQuote,
         Link,
         OrderedList,
-        UnorderedList
+        UnorderedList,
+        Line,
+        Image
     }
     public class Tokenizer
     {
@@ -36,10 +38,17 @@ namespace ConvertMarkdown
 
             tokenMatchers.Add(new TokenMatcher(TokenType.Header, "^#+ (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "___(.+?)___"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Bold, "\\*\\*(.+?)\\*\\*"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Bold, "__(.+?)__"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "\\*(.+?)\\*"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "_(.+?)_"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Image, "!\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
+
             specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
+            specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\+ (.+)"));
+            specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\- (.+)"));
             specialTokenMatchers.Add(new TokenMatcher(TokenType.OrderedList, "^[0-9]+\\. (.+)"));
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
             specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
@@ -47,6 +56,7 @@ namespace ConvertMarkdown
 
         public string Tokenize(string text, List<string> htmlLines)
         {
+            InsertLineBreak(ref text);
             SpecialTokenize(ref text, htmlLines);
             SimpleTokenize(ref text);
             return text;
@@ -62,6 +72,12 @@ namespace ConvertMarkdown
                     string replacement = "";
                     switch (match.TokenType)
                     {
+                        case TokenType.Image:
+                            replacement = Renderer.Image(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value);
+                            break;
+                        case TokenType.Link:
+                            replacement = Renderer.Link(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value);
+                            break;
                         case TokenType.Header:
                             int tokenCount = line.Length - line.Replace("#", "").Length;
                             replacement = Renderer.Heading(tokenCount, match.Value);
@@ -75,9 +91,6 @@ namespace ConvertMarkdown
                             break;
                         case TokenType.BoldItalic:
                             replacement = Renderer.BoldItalic(match.Value);
-                            break;
-                        case TokenType.Link:
-                            replacement = Renderer.Link(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value);
                             break;
                         default:
                             break;
@@ -248,6 +261,13 @@ namespace ConvertMarkdown
             while (line.IndexOf("\t", count) >= 0)
                 count++;
             return count; 
+        }
+
+        public void InsertLineBreak(ref string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return;
+            int spaces = line.Length - line.TrimEnd().Length;
+            line = spaces >= 2 ? line.TrimEnd() + "<br>" : line;
         }
     }
 
