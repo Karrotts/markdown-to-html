@@ -10,12 +10,5 @@ namespace ConvertMarkdown
         {
 
         }
-
-        public string Parse(MarkdownToken token)
-        {
-            string test = token.TokenMatch.Value;
-            Console.WriteLine(test);
-            return "";
-        }
     }
 }
