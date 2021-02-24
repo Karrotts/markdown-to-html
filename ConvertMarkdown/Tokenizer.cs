@@ -23,19 +23,26 @@ namespace ConvertMarkdown
         private List<TokenMatcher> tokenMatchers;
         private List<TokenMatcher> specialTokenMatchers;
         private Stack<TokenType> foundSpecialTokens;
+        private Parser parser;
 
         private byte tabIndex;
         private bool headerFound;
 
         public Tokenizer()
         {
+            parser = new Parser();
             tokenMatchers = new List<TokenMatcher>();
             specialTokenMatchers = new List<TokenMatcher>();
             foundSpecialTokens = new Stack<TokenType>();
 
             tabIndex = 0;
             headerFound = false;
-
+            tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\+ (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\- (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.OrderedList, "^[0-9]+\\. (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Header, "^#+ (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "___(.+?)___"));
@@ -45,21 +52,21 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "_(.+?)_"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Image, "!\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
-
-            specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
-            specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\+ (.+)"));
-            specialTokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\- (.+)"));
-            specialTokenMatchers.Add(new TokenMatcher(TokenType.OrderedList, "^[0-9]+\\. (.+)"));
-            specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
-            specialTokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
         }
 
-        public string Tokenize(string text, List<string> htmlLines)
+        public string Tokenize(string line, List<string> html)
         {
-            InsertLineBreak(ref text);
-            SpecialTokenize(ref text, htmlLines);
-            SimpleTokenize(ref text);
-            return text;
+            foreach (TokenMatcher matcher in tokenMatchers)
+            {
+                TokenMatch match = matcher.Match(line);
+                while(match.IsMatch)
+                {
+                    line = parser.Parse(line, html, match);
+                    match = matcher.Match(line);
+                }    
+            }
+            line = parser.Close(line);
+            return line;
         }
 
         public void SimpleTokenize(ref string line)
