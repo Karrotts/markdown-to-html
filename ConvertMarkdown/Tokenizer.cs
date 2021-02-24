@@ -65,7 +65,7 @@ namespace ConvertMarkdown
                     match = matcher.Match(line);
                 }    
             }
-            line = parser.Close(line);
+            line = parser.CloseLine(line);
             return line;
         }
 
