@@ -84,3 +84,7 @@
 .markdown li+li {
     margin-top: .25em;
 }
+
+.markdown img {
+    width: 100% !important;
+}

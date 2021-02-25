@@ -70,13 +70,13 @@ namespace ConvertMarkdown
             }
             line = parser.CloseLine(line);
 
-            //if (!parser.specialTokenFound)
-                //line = parser.CloseOpenTags(html) + line;
+            if (!parser.specialTokenFound)
+                line = parser.CloseOpenTags() + line;
 
             return line;
         }
 
-        public void Close(List<string> html) => parser.CloseOpenTags(html);  
+        public void Close() => parser.CloseOpenTags();  
 
         public byte CurrentTab(string line)
         {

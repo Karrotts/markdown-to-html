@@ -183,7 +183,7 @@ namespace ConvertMarkdown
             return line;
         }
 
-        public string CloseOpenTags(List<string> html)
+        public string CloseOpenTags()
         {
             sequenceTab = 0;
             specialTokenFound = false;
