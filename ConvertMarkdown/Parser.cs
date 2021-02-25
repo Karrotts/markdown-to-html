@@ -210,7 +210,7 @@ namespace ConvertMarkdown
             }
             return output;
         }
-
+      
         public byte CurrentTab(string line)
         {
             byte count = 0;
