@@ -9,15 +9,16 @@ namespace ConvertMarkdown
         public static string Convert(List<string> markdownLines)
         {
             Tokenizer tokenizer = new Tokenizer();
-            List<string> htmlLines = new List<string>();
+            List<string> html = new List<string>();
 
             foreach (string markdown in markdownLines)
             {
-                htmlLines.Add(tokenizer.Tokenize(markdown.Trim(' '), htmlLines));
+                html.Add(tokenizer.Tokenize(markdown.Trim(' '), html));
             }
 
-            htmlLines.Add(tokenizer.Close());
-            return string.Join('\n', htmlLines.ToArray());
+            //tokenizer.Close(html);
+            html.RemoveAll(string.IsNullOrWhiteSpace);
+            return string.Join('\n', html.ToArray());
         }
 
         // convert from file
