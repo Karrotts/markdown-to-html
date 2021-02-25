@@ -56,211 +56,27 @@ namespace ConvertMarkdown
 
         public string Tokenize(string line, List<string> html)
         {
+            parser.specialTokenFound = false;
+            byte tabIndex = CurrentTab(line);
             foreach (TokenMatcher matcher in tokenMatchers)
             {
+                line = line.Replace("\t", "");
                 TokenMatch match = matcher.Match(line);
                 while(match.IsMatch)
                 {
-                    line = parser.Parse(line, html, match);
+                    line = parser.Parse(line, html, match, tabIndex);
                     match = matcher.Match(line);
                 }    
             }
             line = parser.CloseLine(line);
+
+            //if (!parser.specialTokenFound)
+                //line = parser.CloseOpenTags(html) + line;
+
             return line;
         }
 
-        public void SimpleTokenize(ref string line)
-        {
-            foreach (TokenMatcher matcher in tokenMatchers)
-            {
-                TokenMatch match = matcher.Match(line);
-                while (match.IsMatch)
-                {
-                    string replacement = "";
-                    switch (match.TokenType)
-                    {
-                        case TokenType.Image:
-                            replacement = Renderer.Image(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value);
-                            break;
-                        case TokenType.Link:
-                            replacement = Renderer.Link(match.BaseMatch.Groups[1].Value, match.BaseMatch.Groups[2].Value);
-                            break;
-                        case TokenType.Header:
-                            int tokenCount = line.Length - line.Replace("#", "").Length;
-                            replacement = Renderer.Heading(tokenCount, match.Value);
-                            headerFound = true;
-                            break;
-                        case TokenType.Italic:
-                            replacement = Renderer.Italic(match.Value);
-                            break;
-                        case TokenType.Bold:
-                            replacement = Renderer.Bold(match.Value);
-                            break;
-                        case TokenType.BoldItalic:
-                            replacement = Renderer.BoldItalic(match.Value);
-                            break;
-                        default:
-                            break;
-                    }
-                    line = Builder.RepaceInString(line, replacement, match.StartIndex, match.EndIndex);
-                    match = matcher.Match(line);
-                }
-            }
-
-            if(!headerFound && !string.IsNullOrWhiteSpace(line))
-            {
-                line = Builder.RepaceInString(line, Renderer.Paragraph(line), 0, line.Length - 1);
-            }
-
-            headerFound = false;
-        }
-
-        public void SpecialTokenize(ref string line, List<string> htmlLines)
-        {
-            if (string.IsNullOrWhiteSpace(line)) return;
-
-            bool itemFound = false;
-            bool tabFound = line.IndexOf("\t") == 0;
-
-            byte newTabIndex = CurrentTab(line);
-
-            line = tabFound ? line.Replace("\t", "") : line;
-
-            foreach (TokenMatcher matcher in specialTokenMatchers)
-            {
-                TokenMatch match = matcher.Match(line);
-                if (match.IsMatch)
-                {
-                    itemFound = true;
-                    switch (match.TokenType)
-                    {
-                        case TokenType.BlockQuote:
-                            line = Builder.RepaceInString(line, "", 0, 1);
-
-                            if (foundSpecialTokens.Count == 0 || foundSpecialTokens.Peek() != TokenType.BlockQuote)
-                            {
-                                htmlLines.Add("<blockquote>");
-                                foundSpecialTokens.Push(TokenType.BlockQuote);
-                            }
-                            break;
-                        case TokenType.UnorderedList:
-                            // Check if the previous token was an unordered list and pop it from the stack
-                            if (foundSpecialTokens.Count > 0
-                            && foundSpecialTokens.Peek() == TokenType.OrderedList)
-                            {
-                                htmlLines.Add("</ol>");
-                                foundSpecialTokens.Pop();
-                            }
-
-                            // Add new element if there is a tab or first time seeing the match
-                            if (foundSpecialTokens.Count == 0 
-                            || foundSpecialTokens.Peek() != TokenType.UnorderedList 
-                            || tabFound && newTabIndex > tabIndex && newTabIndex - tabIndex == 1)
-                            {
-                                htmlLines.Add("<ul>");
-                                foundSpecialTokens.Push(TokenType.UnorderedList);
-                                tabIndex = newTabIndex;
-                            }
-
-                            // Close child element if untabbed
-                            if (newTabIndex < tabIndex)
-                            {
-                                while(tabIndex - newTabIndex > 0)
-                                {
-                                    if(foundSpecialTokens.Peek() == TokenType.UnorderedList)
-                                    {
-                                        htmlLines.Add("</ul>");
-                                        foundSpecialTokens.Pop();
-                                        tabIndex--;
-                                    }
-                                }
-                            }
-
-                            // Insert list item into line
-                            line = Builder.RepaceInString(line,
-                                                          Renderer.ListItem(match.Value),
-                                                          match.StartIndex,
-                                                          match.EndIndex);
-                            headerFound = true;
-                            break;
-                        case TokenType.OrderedList:
-                            // Check if the previous token was an unordered list and pop it from the stack
-                            if (foundSpecialTokens.Count > 0
-                            && foundSpecialTokens.Peek() == TokenType.UnorderedList)
-                            {
-                                htmlLines.Add("</ul>");
-                                foundSpecialTokens.Pop();
-                            }
-
-                            // Add new element if there is a tab or first time seeing the match
-                            if (foundSpecialTokens.Count == 0
-                            || foundSpecialTokens.Peek() != TokenType.OrderedList
-                            || tabFound && newTabIndex > tabIndex && newTabIndex - tabIndex == 1)
-                            {
-                                htmlLines.Add("<ol>");
-                                foundSpecialTokens.Push(TokenType.OrderedList);
-                                tabIndex = newTabIndex;
-                            }
-
-                            // Close child element if untabbed
-                            else if (newTabIndex < tabIndex)
-                            {
-                                while (tabIndex - newTabIndex > 0)
-                                {
-                                    if (foundSpecialTokens.Peek() == TokenType.OrderedList)
-                                    {
-                                        htmlLines.Add("</ol>");
-                                        foundSpecialTokens.Pop();
-                                        tabIndex--;
-                                    }
-                                }
-                            }
-
-                            // Insert list item into line
-                            line = Builder.RepaceInString(line,
-                                                          Renderer.ListItem(match.Value),
-                                                          match.StartIndex,
-                                                          match.EndIndex);
-                            headerFound = true;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            if (!itemFound)
-            {
-                htmlLines.Add(Close());
-            }
-        }
-
-        public string Close()
-        {
-            tabIndex = 0;
-            string output = "";
-            while(foundSpecialTokens.Count > 0)
-            {
-                switch(foundSpecialTokens.Peek())
-                {
-                    case TokenType.BlockQuote:
-                        output += "</blockquote>";
-                        foundSpecialTokens.Pop();
-                        break;
-                    case TokenType.UnorderedList:
-                        output += "</ul>";
-                        foundSpecialTokens.Pop();
-                        break;
-                    case TokenType.OrderedList:
-                        output += "</ol>";
-                        foundSpecialTokens.Pop();
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return output;
-        }
+        public void Close(List<string> html) => parser.CloseOpenTags(html);  
 
         public byte CurrentTab(string line)
         {
@@ -270,12 +86,6 @@ namespace ConvertMarkdown
             return count; 
         }
 
-        public void InsertLineBreak(ref string line)
-        {
-            if (string.IsNullOrWhiteSpace(line)) return;
-            int spaces = line.Length - line.TrimEnd().Length;
-            line = spaces >= 2 ? line.TrimEnd() + "<br>" : line;
-        }
     }
 
     public class TokenMatcher
