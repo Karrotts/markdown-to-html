@@ -16,7 +16,7 @@ namespace ConvertMarkdown
                 html.Add(tokenizer.Tokenize(markdown.Trim(' '), html));
             }
 
-            //tokenizer.Close(html);
+            tokenizer.Close();
             html.RemoveAll(string.IsNullOrWhiteSpace);
             return string.Join('\n', html.ToArray());
         }

@@ -21,22 +21,12 @@ namespace ConvertMarkdown
     public class Tokenizer
     {
         private List<TokenMatcher> tokenMatchers;
-        private List<TokenMatcher> specialTokenMatchers;
-        private Stack<TokenType> foundSpecialTokens;
         private Parser parser;
-
-        private byte tabIndex;
-        private bool headerFound;
 
         public Tokenizer()
         {
             parser = new Parser();
             tokenMatchers = new List<TokenMatcher>();
-            specialTokenMatchers = new List<TokenMatcher>();
-            foundSpecialTokens = new Stack<TokenType>();
-
-            tabIndex = 0;
-            headerFound = false;
             tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\+ (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\- (.+)"));
@@ -70,13 +60,13 @@ namespace ConvertMarkdown
             }
             line = parser.CloseLine(line);
 
-            //if (!parser.specialTokenFound)
-                //line = parser.CloseOpenTags(html) + line;
+            if (!parser.specialTokenFound)
+                line = parser.CloseOpenTags() + line;
 
             return line;
         }
 
-        public void Close(List<string> html) => parser.CloseOpenTags(html);  
+        public void Close() => parser.CloseOpenTags();  
 
         public byte CurrentTab(string line)
         {
