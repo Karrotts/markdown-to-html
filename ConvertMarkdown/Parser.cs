@@ -63,6 +63,11 @@ namespace ConvertMarkdown
                                                   match.EndIndex);
                     break;
                 case TokenType.BlockQuote:
+                    lineContained = true;
+                    line = Builder.RepaceInString(line,
+                                                  Renderer.BlockQuote(match.Value),
+                                                  match.StartIndex,
+                                                  match.EndIndex);
                     break;
                 case TokenType.UnorderedList:
                     lineContained = true;

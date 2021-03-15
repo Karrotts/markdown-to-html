@@ -16,7 +16,9 @@ namespace ConvertMarkdown
         OrderedList,
         UnorderedList,
         Line,
-        Image
+        Image,
+        Codeblock,
+        Codeline
     }
     public class Tokenizer
     {
