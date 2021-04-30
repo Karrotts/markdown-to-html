@@ -44,6 +44,7 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.Italic, "_(.+?)_"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Image, "!\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Line, "----"));
         }
 
         public string Tokenize(string line, List<string> html)

@@ -62,6 +62,12 @@ namespace ConvertMarkdown
                                                   match.StartIndex,
                                                   match.EndIndex);
                     break;
+                case TokenType.Line:
+                    line = Builder.RepaceInString(line,
+                                                  Renderer.Line(match.Value),
+                                                  match.StartIndex,
+                                                  match.EndIndex);
+                    break;
                 case TokenType.BlockQuote:
                     lineContained = true;
                     line = Builder.RepaceInString(line,
