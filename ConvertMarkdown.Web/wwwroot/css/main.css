@@ -17,74 +17,93 @@
     height: 25px;
 }
 
-.markdown {
-    width: 100vw;
-    height: 99vh;
-    max-width: 1000px;
-    max-height: 100%;
-    padding: 50px;
-    border: 1px solid black;
+.markdown_main {
+    margin-top: 20px;
+    height: 93%;
+    padding: 2rem;
+    overflow-x: hidden;
     overflow-y: scroll;
-    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
-    font-size: 16px;
+    background: #F5F5F5;
+    -webkit-box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.16);
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.16);
     color: #24292e;
+    font-size: 1.1em;
+    line-height: 1.7em;
 }
 
-.markdown h1 {
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    font-weight:500;
-    border-bottom: 1px solid lightgray;
-}
+    .markdown_main h1 {
+        margin-bottom: 5px !important;
+        padding-bottom: 5px !important;
+        font-weight: 300 !important;
+        border-bottom: 1px solid lightgray !important;
+    }
 
-.markdown h2 {
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    font-weight: 500;
-    border-bottom: 1px solid lightgray;
-}
+    .markdown_main h2 {
+        margin-bottom: 10px !important;
+        padding-bottom: 5px !important;
+        font-weight: 300 !important;
+        margin-top: 20px;
+        border-bottom: 1px solid lightgray !important;
+    }
 
-.markdown h3 {
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    font-weight: 500;
-}
+    .markdown_main h3 {
+        margin-bottom: 5px !important;
+        padding-bottom: 5px !important;
+        font-weight: 300 !important;
+    }
 
-.markdown h4 {
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    font-weight: 500;
-}
+    .markdown_main h4 {
+        margin-bottom: 5px !important;
+        padding-bottom: 5px !important;
+        font-weight: 300 !important;
+    }
 
-.markdown h5 {
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    font-weight: 500;
-}
+    .markdown_main h5 {
+        margin-bottom: 5px !important;
+        padding-bottom: 5px !important;
+        font-weight: 300 !important;
+    }
 
-.markdown h6 {
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    font-weight: 500;
-}
+    .markdown_main h6 {
+        margin-bottom: 5px !important;
+        padding-bottom: 5px !important;
+        font-weight: 300 !important;
+    }
 
-.markdown a {
-    text-decoration-line: none;
-    color: #1888e2;
-}
+    .markdown_main a {
+        -webkit-text-decoration-line: none !important;
+        text-decoration-line: none !important;
+        color: #3b9c50 !important;
+    }
 
-.markdown ul {
-    margin: 0px;
-}
+    .markdown_main blockquote {
+        background: #F5F5F5;
+        border-left: 4px solid lightgray;
+        padding-left: 5px;
+    }
 
-.markdown ol {
-    margin: 0px;
-}
+    .markdown_main p {
+        margin-bottom: 10px;
+    }
 
-.markdown li+li {
-    margin-top: .25em;
-}
+    .markdown_main ul {
+        margin: 0px !important;
+    }
 
-.markdown img {
-    max-width: 100% !important;
-}
+    .markdown_main ol {
+        margin: 0px !important;
+    }
+
+    .markdown_main li + li {
+        margin-top: .25em !important;
+    }
+
+    .markdown_main img {
+        width: 100% !important;
+    }
+
+    .markdown_main code {
+        background: #F5F5F5;
+        padding: 5px;
+        color: #466EAB;
+    }

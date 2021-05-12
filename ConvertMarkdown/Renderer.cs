@@ -50,11 +50,6 @@ namespace ConvertMarkdown
             return $"<strong><em>{text}</em></strong>";
         }
 
-        public static string BlockQuote(string text)
-        {
-            return $"<blockquote>{text}</blockquote>";
-        }
-
         public static string ListItem(string text)
         {
             return $"<li>{text}</li>";

@@ -42,6 +42,12 @@ namespace ConvertMarkdown
                                                   match.StartIndex,
                                                   match.EndIndex);
                     break;
+                case TokenType.Codeline:
+                    line = Builder.RepaceInString(line,
+                                                  Renderer.Code(match.Value),
+                                                  match.StartIndex,
+                                                  match.EndIndex);
+                    break;
                 case TokenType.Header:
                     lineContained = true;
                     int weight = line.Length - line.Replace("#", "").Length;
@@ -69,11 +75,16 @@ namespace ConvertMarkdown
                                                   match.EndIndex);
                     break;
                 case TokenType.BlockQuote:
-                    lineContained = true;
+                    specialTokenFound = true;
                     line = Builder.RepaceInString(line,
-                                                  Renderer.BlockQuote(match.Value),
-                                                  match.StartIndex,
-                                                  match.EndIndex);
+                           "",
+                           match.StartIndex,
+                           match.StartIndex + 1);
+                    if (!ContainsToken(TokenType.BlockQuote))
+                    {
+                        specialTokens.Push(TokenType.BlockQuote);
+                        html.Add("<blockquote>");
+                    }
                     break;
                 case TokenType.UnorderedList:
                     lineContained = true;
@@ -123,7 +134,8 @@ namespace ConvertMarkdown
             }
 
             if(specialTokens.Count == 0
-            || ElementIsInNewTab(tabIndex))
+            || ElementIsInNewTab(tabIndex)
+            || specialTokens.Peek() == TokenType.BlockQuote)
             {
                 sequenceTab = tabIndex;
                 html.Add("<ul>");
@@ -162,7 +174,8 @@ namespace ConvertMarkdown
             }
 
             if (specialTokens.Count == 0
-            || ElementIsInNewTab(tabIndex))
+            || ElementIsInNewTab(tabIndex)
+            || specialTokens.Peek() == TokenType.BlockQuote)
             {
                 sequenceTab = tabIndex;
                 html.Add("<ol>");
@@ -182,6 +195,8 @@ namespace ConvertMarkdown
                 }
             }
         }
+
+        private void AddCodeBlock(List<string> html, string line) { }
 
         public string CloseLine(string line)
         {
@@ -228,6 +243,15 @@ namespace ConvertMarkdown
             while (line.IndexOf("\t", count) >= 0)
                 count++;
             return count;
+        }
+
+        public bool ContainsToken(TokenType type)
+        {
+            foreach(TokenType t in specialTokens)
+            {
+                if (t == type) return true;
+            }
+            return false;
         }
     }
 }

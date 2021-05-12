@@ -12,7 +12,7 @@ namespace ConvertMarkdown
         {
             IllegalCharacters = new Dictionary<char, string>();
             IllegalCharacters.Add('<', "&lt;");
-            IllegalCharacters.Add('>', "&gt;");
+            //IllegalCharacters.Add('>', "&gt;");
         }
 
         public static string RepaceInString(string original, string replacement, int startIndex, int endIndex)

@@ -29,12 +29,12 @@ namespace ConvertMarkdown
         {
             parser = new Parser();
             tokenMatchers = new List<TokenMatcher>();
+            tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\+ (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\- (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.OrderedList, "^[0-9]+\\. (.+)"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Header, "^#+ (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "\\*\\*\\*(.+?)\\*\\*\\*"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BoldItalic, "___(.+?)___"));
@@ -45,6 +45,9 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.Image, "!\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Line, "----"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Codeblock, "```"));
+            tokenMatchers.Add(new TokenMatcher(TokenType.Codeline, "`(.+?)`"));
+
         }
 
         public string Tokenize(string line, List<string> html)
@@ -54,6 +57,7 @@ namespace ConvertMarkdown
             byte tabIndex = CurrentTab(line);
             foreach (TokenMatcher matcher in tokenMatchers)
             {
+                if (string.IsNullOrEmpty(line)) break;
                 line = line.Replace("\t", "");
                 TokenMatch match = matcher.Match(line);
                 while(match.IsMatch)
