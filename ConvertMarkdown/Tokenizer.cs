@@ -45,7 +45,7 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.Image, "!\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Line, "----"));
-            tokenMatchers.Add(new TokenMatcher(TokenType.Codeblock, "```"));
+            //tokenMatchers.Add(new TokenMatcher(TokenType.Codeblock, "```"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Codeline, "`(.+?)`"));
 
         }
