@@ -25,6 +25,11 @@ namespace ConvertMarkdown
             return $"<p>{text}</p>";
         }
 
+        public static string Line(string text)
+        {
+            return "<hr>";
+        }
+
         public static string LineBreak()
         {
             return "<br>";
