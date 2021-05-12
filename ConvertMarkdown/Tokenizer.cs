@@ -48,6 +48,7 @@ namespace ConvertMarkdown
 
         public string Tokenize(string line, List<string> html)
         {
+            line = Builder.Clean(line);
             parser.specialTokenFound = false;
             byte tabIndex = CurrentTab(line);
             foreach (TokenMatcher matcher in tokenMatchers)

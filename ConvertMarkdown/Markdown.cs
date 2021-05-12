@@ -9,6 +9,7 @@ namespace ConvertMarkdown
         public static string Convert(List<string> markdownLines)
         {
             Tokenizer tokenizer = new Tokenizer();
+            Builder.Initialize();
             List<string> html = new List<string>();
 
             foreach (string markdown in markdownLines)
