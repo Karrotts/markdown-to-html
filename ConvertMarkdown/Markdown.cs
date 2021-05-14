@@ -14,12 +14,12 @@ namespace ConvertMarkdown
 
             foreach (string markdown in markdownLines)
             {
-                html.Add(tokenizer.Tokenize(markdown.Trim(' '), html));
+                html.Add(tokenizer.Tokenize(markdown, html));
             }
 
             tokenizer.Close();
-            html.RemoveAll(string.IsNullOrWhiteSpace);
-            return string.Join('\n', html.ToArray());
+            //html.RemoveAll(string.IsNullOrWhiteSpace);
+            return string.Join('\0', html.ToArray());
         }
 
         // convert from file

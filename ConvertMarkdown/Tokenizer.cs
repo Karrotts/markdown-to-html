@@ -24,11 +24,14 @@ namespace ConvertMarkdown
     {
         private List<TokenMatcher> tokenMatchers;
         private Parser parser;
+        private bool InCodeBlock = false;
+        private bool PrevLineCodeBlock = false;
 
         public Tokenizer()
         {
             parser = new Parser();
             tokenMatchers = new List<TokenMatcher>();
+            tokenMatchers.Add(new TokenMatcher(TokenType.Codeblock, "^```$"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^> (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.BlockQuote, "^>> (.+)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.UnorderedList, "^\\* (.+)"));
@@ -45,7 +48,6 @@ namespace ConvertMarkdown
             tokenMatchers.Add(new TokenMatcher(TokenType.Image, "!\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Link, "\\[(.+?)\\]\\((.+?)\\)"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Line, "----"));
-            //tokenMatchers.Add(new TokenMatcher(TokenType.Codeblock, "```"));
             tokenMatchers.Add(new TokenMatcher(TokenType.Codeline, "`(.+?)`"));
 
         }
@@ -57,14 +59,41 @@ namespace ConvertMarkdown
             byte tabIndex = CurrentTab(line);
             foreach (TokenMatcher matcher in tokenMatchers)
             {
+                bool isCodeBlock = matcher.Match(line).TokenType == TokenType.Codeblock;
+                if (isCodeBlock)
+                {
+                    PrevLineCodeBlock = true;
+                    if (!InCodeBlock)
+                        html.Add("<pre><code>");
+                    else
+                        html.Add("</pre></code>");
+                    InCodeBlock = !InCodeBlock;
+                    line = "";
+                    break;
+                }
+
+                if (InCodeBlock)
+                {
+                    if (string.IsNullOrEmpty(line)) line = " ";
+                    if (!PrevLineCodeBlock)
+                        html.Add('\n' + line);
+                    else
+                        html.Add(line);
+                    PrevLineCodeBlock = false;
+                    line = "";
+                    break;
+                }
+
+                PrevLineCodeBlock = false;
+                line.Trim(' ');
                 if (string.IsNullOrEmpty(line)) break;
                 line = line.Replace("\t", "");
                 TokenMatch match = matcher.Match(line);
-                while(match.IsMatch)
+                while (match.IsMatch)
                 {
                     line = parser.Parse(line, html, match, tabIndex);
                     match = matcher.Match(line);
-                }    
+                } 
             }
             line = parser.CloseLine(line);
 
